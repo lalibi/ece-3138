@@ -1,4 +1,5 @@
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 
 using namespace std;
@@ -71,7 +72,7 @@ class State {
         number_of_heaps = h;
         number_of_players = n;
 
-        next_player = 0;
+        current_player = 0;
     }
 
     ~State() {
@@ -98,7 +99,7 @@ class State {
         coins[move.getSource()] -= move.getSourceCoins();
         coins[move.getTarget()] += move.getTargetCoins();
 
-        next_player = (next_player + 1) % number_of_players;
+        current_player = (current_player + 1) % number_of_players;
     }
 
     bool winning() const {
@@ -125,7 +126,7 @@ class State {
     }
 
     int getPlaying() const {
-        return next_player;
+        return current_player;
     }
 
     friend ostream &operator<<(ostream &out, const State &state) {
@@ -136,7 +137,8 @@ class State {
             out << state.coins[i];
         }
 
-        out << " with " << state.next_player << "/" << state.number_of_players << " playing next";
+        out << " with " << state.current_player << "/" << state.number_of_players
+            << " playing next";
 
         return out;
     }
@@ -145,5 +147,145 @@ class State {
     int *coins;
     int number_of_heaps;
     int number_of_players;
-    int next_player;
+    int current_player;
 };
+
+class Player {
+  public:
+    Player(const string &n) {
+        name = n;
+    }
+
+    virtual const string &getType() const = 0;
+    virtual Move play(const State &s) = 0;
+
+    friend ostream &operator<<(ostream &out, const Player &player) {
+        out << player.type << " player " << player.name;
+        return out;
+    }
+
+  protected:
+    string type;
+
+  private:
+    string name;
+};
+
+class GreedyPlayer : public Player {
+  public:
+    GreedyPlayer(const string &n) : Player(n) {
+        type = "Greedy";
+    }
+
+    const string &getType() const {
+        return type;
+    }
+
+    Move play(const State &s) {
+        int max_coins = s.getCoins(0);
+        int max_heap = 0;
+
+        for (int i = 1; i < s.getHeaps(); i++) {
+            if (s.getCoins(i) > max_coins) {
+                max_coins = s.getCoins(i);
+                max_heap = i;
+            }
+        }
+
+        return Move(max_heap, max_coins, 0, 0);
+    }
+};
+
+class SpartanPlayer : public Player {
+  public:
+    SpartanPlayer(const string &n) : Player(n) {
+        type = "Spartan";
+    }
+
+    const string &getType() const {
+        return type;
+    }
+
+    Move play(const State &s) {
+        int max_coins = s.getCoins(0);
+        int max_heap = 0;
+
+        for (int i = 1; i < s.getHeaps(); i++) {
+            if (s.getCoins(i) > max_coins) {
+                max_coins = s.getCoins(i);
+                max_heap = i;
+            }
+        }
+
+        return Move(max_heap, 1, 0, 0);
+    }
+};
+
+class SneakyPlayer : public Player {
+  public:
+    SneakyPlayer(const string &n) : Player(n) {
+        type = "Sneaky";
+    }
+
+    const string &getType() const {
+        return type;
+    }
+
+    Move play(const State &s) {
+        int min_coins = INT_MAX;
+        int min_heap = 0;
+
+        for (int i = 0; i < s.getHeaps(); i++) {
+            int c = s.getCoins(i);
+            if (c > 0 && c < min_coins) {
+                min_coins = c;
+                min_heap = i;
+            }
+        }
+
+        return Move(min_heap, min_coins, 0, 0);
+    }
+};
+
+class RighteousPlayer : public Player {
+  public:
+    RighteousPlayer(const string &n) : Player(n) {
+        type = "Righteous";
+    }
+
+    const string &getType() const {
+        return type;
+    }
+
+    Move play(const State &s) {
+        int max_coins = s.getCoins(0);
+        int max_heap = 0;
+        int min_coins = s.getCoins(0);
+        int min_heap = 0;
+
+        for (int i = 1; i < s.getHeaps(); i++) {
+            if (s.getCoins(i) > max_coins) {
+                max_coins = s.getCoins(i);
+                max_heap = i;
+            }
+
+            if (s.getCoins(i) < min_coins) {
+                min_coins = s.getCoins(i);
+                min_heap = i;
+            }
+        }
+
+        int t;
+        if (max_coins % 2 == 0) {   // even
+            t = max_coins / 2;
+        } else {   // odd
+            t = max_coins / 2 + 1;
+        }
+
+        // int t = ceil(mac_coints / 2);
+
+        return Move(max_heap, t, min_heap, t - 1);
+    }
+};
+
+int main() {}
