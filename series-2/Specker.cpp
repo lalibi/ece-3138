@@ -288,4 +288,89 @@ class RighteousPlayer : public Player {
     }
 };
 
-int main() {}
+class Game {
+  public:
+    Game(int h, int p) {
+        total_heaps = h;
+        total_players = p;
+
+        heaps = new int[total_heaps];
+        players = new Player *[total_players];
+
+        heaps_added = 0;
+        players_added = 0;
+    }
+
+    ~Game() {
+        delete[] heaps;
+        delete[] players;
+    }
+
+    void addHeap(int coins) throw(logic_error) {
+        if (total_heaps == heaps_added) throw logic_error("all heaps have already been added");
+
+        heaps[heaps_added++] = coins;
+    }
+
+    void addPlayer(Player *player) throw(logic_error) {
+        if (total_players == players_added)
+            throw logic_error("all players have already been added");
+
+        players[players_added++] = player;
+    }
+
+    void play(ostream &out) throw(logic_error) {
+        if (heaps_added != total_heaps) throw logic_error("not all heaps have been added");
+        if (players_added != total_players) throw logic_error("not all players have been added");
+
+        State state(total_heaps, heaps, total_players);
+
+        out << "State: " << state << endl;
+
+        Player *player;
+        while (!state.winning()) {
+            player = players[state.getPlaying()];
+            Move move = player->play(state);   // (*player).play(state)
+
+            out << *player << " " << move << endl;
+
+            state.next(move);
+
+            out << "State: " << state << endl;
+        }
+
+        out << *player << " wins";
+    }
+
+    int getPlayers() const {
+        return total_players;
+    }
+
+    const Player *getPlayer(int p) const throw(logic_error) {
+        if (p < 0 || p >= total_players) throw logic_error("invalid player number");
+
+        return players[p];
+    }
+
+  private:
+    int total_heaps;
+    int total_players;
+
+    int *heaps;
+    Player **players;
+
+    int heaps_added;
+    int players_added;
+};
+
+int main() {
+    Game specker(3, 4);
+    specker.addHeap(10);
+    specker.addHeap(20);
+    specker.addHeap(17);
+    specker.addPlayer(new SneakyPlayer("Tom"));
+    specker.addPlayer(new SpartanPlayer("Mary"));
+    specker.addPlayer(new GreedyPlayer("Alan"));
+    specker.addPlayer(new RighteousPlayer("Robin"));
+    specker.play(cout);
+}
