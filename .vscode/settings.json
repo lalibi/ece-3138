@@ -17,7 +17,5 @@
   },
 
   "C_Cpp.codeAnalysis.clangTidy.enabled": true,
-  "C_Cpp.codeAnalysis.clangTidy.checks.disabled": [
-    "clang-analyzer-security.insecureAPI.strcpy"
-  ]
+  "C_Cpp.codeAnalysis.clangTidy.checks.disabled": []
 }
